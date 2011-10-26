@@ -288,13 +288,25 @@ RABBITMQ_EXPORT int amqp_send_header(amqp_connection_state_t state);
 RABBITMQ_EXPORT amqp_boolean_t amqp_frames_enqueued(
                                                amqp_connection_state_t state);
 
+RABBITMQ_EXPORT amqp_boolean_t amqp_frames_enqueued_for_channel(
+                                               amqp_connection_state_t state,
+                                               amqp_channel_t channel);
+
 RABBITMQ_EXPORT int amqp_simple_wait_frame(amqp_connection_state_t state,
+					   amqp_frame_t *decoded_frame);
+
+RABBITMQ_EXPORT int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
+             amqp_channel_t channel,
 					   amqp_frame_t *decoded_frame);
 
 RABBITMQ_EXPORT int amqp_simple_wait_method(amqp_connection_state_t state,
                                           amqp_channel_t expected_channel,
                                           amqp_method_number_t expected_method,
                                           amqp_method_t *output);
+
+RABBITMQ_EXPORT amqp_rpc_reply_t amqp_simple_wait_methods(amqp_connection_state_t state,
+                                            amqp_channel_t channel,
+                                            amqp_method_number_t *expected_method_ids);
 
 RABBITMQ_EXPORT int amqp_send_method(amqp_connection_state_t state,
 				     amqp_channel_t channel,

@@ -146,6 +146,22 @@ amqp_boolean_t amqp_frames_enqueued(amqp_connection_state_t state) {
   return (state->first_queued_frame != NULL);
 }
 
+amqp_boolean_t amqp_frames_enqueued_for_channel(amqp_connection_state_t state,
+  amqp_channel_t channel)
+{
+  amqp_link_t* cur = state->first_queued_frame;
+  while (cur != NULL)
+  {
+    amqp_frame_t* frame = (amqp_frame_t*)cur->data;
+    if (frame->channel == channel)
+    {
+      return 1;
+    }
+    cur = cur->next;
+  }
+
+  return 0;
+}
 /*
  * Check to see if we have data in our buffer. If this returns 1, we
  * will avoid an immediate blocking read in amqp_simple_wait_frame.
@@ -207,6 +223,47 @@ int amqp_simple_wait_frame(amqp_connection_state_t state,
   } else {
     return wait_frame_inner(state, decoded_frame);
   }
+}
+
+int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
+  amqp_channel_t channel,
+  amqp_frame_t *decoded_frame)
+{
+  /* First check the queued frames see if there are any 
+     that we want */
+  int wait_return;
+  amqp_link_t* prev = state->first_queued_frame;
+  amqp_link_t* cur = state->first_queued_frame;
+  amqp_frame_t* possible_frame;
+  while (cur != NULL)
+  {
+    possible_frame = (amqp_frame_t*)cur->data;
+    if (possible_frame->channel == channel)
+    {
+      prev->next = cur->next;
+      decoded_frame = possible_frame;
+      return 0;
+    }
+    prev = cur;
+    cur = cur->next;
+  }
+
+  /* Nothing suitable queued up? Go to the network */
+  wait_return = wait_frame_inner(state, possible_frame);
+  while (wait_return != 0)
+  {
+    if (possible_frame->channel == channel)
+    {
+      decoded_frame = possible_frame;
+      return 0;
+    }
+    cur = (amqp_link_t*)amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_link_t));
+    cur->data = possible_frame;
+    cur->next = NULL;
+    prev->next = cur;
+    prev = cur;
+  }
+  return wait_return;
 }
 
 int amqp_simple_wait_method(amqp_connection_state_t state,
@@ -278,65 +335,72 @@ amqp_rpc_reply_t amqp_simple_rpc(amqp_connection_state_t state,
     result.library_error = -status;
     return result;
   }
+  return amqp_simple_wait_methods(state, channel, expected_reply_ids);
+}
 
+amqp_rpc_reply_t amqp_simple_wait_methods(amqp_connection_state_t state,
+                             amqp_channel_t channel,
+                             amqp_method_number_t *expected_method_ids)
+{
+  amqp_frame_t frame;
+  int status;
+  amqp_rpc_reply_t result;
+
+
+retry:
+  status = wait_frame_inner(state, &frame);
+  if (status < 0) {
+    result.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
+    result.library_error = -status;
+    return result;
+  }
+
+  /*
+  * We store the frame for later processing unless it's something
+  * that directly affects us here, namely a method frame that is
+  * either
+  *  - on the channel we want, and of the expected type, or
+  *  - on the channel we want, and a channel.close frame, or
+  *  - on channel zero, and a connection.close frame.
+  */
+  if (!( (frame.frame_type == AMQP_FRAME_METHOD) &&
+    (   ((frame.channel == channel) &&
+    ((amqp_id_in_reply_list(frame.payload.method.id, expected_method_ids)) ||
+    (frame.payload.method.id == AMQP_CHANNEL_CLOSE_METHOD)))
+    ||
+    ((frame.channel == 0) &&
+    (frame.payload.method.id == AMQP_CONNECTION_CLOSE_METHOD))   ) ))
   {
-    amqp_frame_t frame;
+    amqp_frame_t *frame_copy = amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_frame_t));
+    amqp_link_t *link = amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_link_t));
 
-  retry:
-    status = wait_frame_inner(state, &frame);
-    if (status < 0) {
+    if (frame_copy == NULL || link == NULL) {
       result.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-      result.library_error = -status;
+      result.library_error = ERROR_NO_MEMORY;
       return result;
     }
 
-    /*
-     * We store the frame for later processing unless it's something
-     * that directly affects us here, namely a method frame that is
-     * either
-     *  - on the channel we want, and of the expected type, or
-     *  - on the channel we want, and a channel.close frame, or
-     *  - on channel zero, and a connection.close frame.
-     */
-    if (!( (frame.frame_type == AMQP_FRAME_METHOD) &&
-	   (   ((frame.channel == channel) &&
-		((amqp_id_in_reply_list(frame.payload.method.id, expected_reply_ids)) ||
-		 (frame.payload.method.id == AMQP_CHANNEL_CLOSE_METHOD)))
-	    ||
-	       ((frame.channel == 0) &&
-		(frame.payload.method.id == AMQP_CONNECTION_CLOSE_METHOD))   ) ))
-    {
-      amqp_frame_t *frame_copy = amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_frame_t));
-      amqp_link_t *link = amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_link_t));
+    *frame_copy = frame;
 
-      if (frame_copy == NULL || link == NULL) {
-	result.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-	result.library_error = ERROR_NO_MEMORY;
-	return result;
-      }
+    link->next = NULL;
+    link->data = frame_copy;
 
-      *frame_copy = frame;
-
-      link->next = NULL;
-      link->data = frame_copy;
-
-      if (state->last_queued_frame == NULL) {
-	state->first_queued_frame = link;
-      } else {
-	state->last_queued_frame->next = link;
-      }
-      state->last_queued_frame = link;
-
-      goto retry;
+    if (state->last_queued_frame == NULL) {
+      state->first_queued_frame = link;
+    } else {
+      state->last_queued_frame->next = link;
     }
+    state->last_queued_frame = link;
 
-    result.reply_type = (amqp_id_in_reply_list(frame.payload.method.id, expected_reply_ids))
-      ? AMQP_RESPONSE_NORMAL
-      : AMQP_RESPONSE_SERVER_EXCEPTION;
-
-    result.reply = frame.payload.method;
-    return result;
+    goto retry;
   }
+
+  result.reply_type = (amqp_id_in_reply_list(frame.payload.method.id, expected_method_ids))
+    ? AMQP_RESPONSE_NORMAL
+    : AMQP_RESPONSE_SERVER_EXCEPTION;
+
+  result.reply = frame.payload.method;
+  return result;
 }
 
 void *amqp_simple_rpc_decoded(amqp_connection_state_t state,
