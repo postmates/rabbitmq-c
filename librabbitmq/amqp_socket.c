@@ -234,14 +234,15 @@ int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
   int wait_return;
   amqp_link_t* prev = state->first_queued_frame;
   amqp_link_t* cur = state->first_queued_frame;
-  amqp_frame_t* possible_frame;
+  amqp_frame_t frame;
+  amqp_frame_t* frame_ptr = NULL;
   while (cur != NULL)
   {
-    possible_frame = (amqp_frame_t*)cur->data;
-    if (possible_frame->channel == channel)
+    frame_ptr = (amqp_frame_t*)cur->data;
+    if (frame_ptr->channel == channel)
     {
       prev->next = cur->next;
-      decoded_frame = possible_frame;
+      *decoded_frame = *frame_ptr;
       return 0;
     }
     prev = cur;
@@ -249,16 +250,18 @@ int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
   }
 
   /* Nothing suitable queued up? Go to the network */
-  wait_return = wait_frame_inner(state, possible_frame);
-  while (wait_return != 0)
+  while (0 == (wait_return = wait_frame_inner(state, &frame)))
   {
-    if (possible_frame->channel == channel)
+    if (frame.channel == channel)
     {
-      decoded_frame = possible_frame;
+      *decoded_frame = frame;
       return 0;
     }
     cur = (amqp_link_t*)amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_link_t));
-    cur->data = possible_frame;
+    frame_ptr = (amqp_frame_t*)amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_frame_t));
+    *frame_ptr = frame;
+
+    cur->data = frame_ptr;
     cur->next = NULL;
     prev->next = cur;
     prev = cur;
