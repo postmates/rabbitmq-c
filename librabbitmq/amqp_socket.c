@@ -241,7 +241,14 @@ int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
     frame_ptr = (amqp_frame_t*)cur->data;
     if (frame_ptr->channel == channel)
     {
-      prev->next = cur->next;
+      if (cur == state->first_queued_frame)
+      {
+        state->first_queued_frame = cur->next;
+      }
+      else
+      {
+        prev->next = cur->next;
+      }
       *decoded_frame = *frame_ptr;
       return 0;
     }
@@ -259,11 +266,21 @@ int amqp_simple_wait_frame_on_channel(amqp_connection_state_t state,
     }
     cur = (amqp_link_t*)amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_link_t));
     frame_ptr = (amqp_frame_t*)amqp_pool_alloc(&state->decoding_pool, sizeof(amqp_frame_t));
+    if (frame_ptr == NULL || cur == NULL) {
+      return -ERROR_NO_MEMORY;
+    }
     *frame_ptr = frame;
 
     cur->data = frame_ptr;
     cur->next = NULL;
-    prev->next = cur;
+    if (prev == NULL)
+    {
+      state->first_queued_frame = cur;
+    }
+    else
+    {
+      prev->next = cur;
+    }
     prev = cur;
   }
   return wait_return;
