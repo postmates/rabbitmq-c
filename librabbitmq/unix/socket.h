@@ -33,14 +33,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-#include <errno.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/uio.h>
-#include <unistd.h>
 
 int
 amqp_socket_init(void);
@@ -49,10 +42,18 @@ int
 amqp_socket_socket(int domain, int type, int proto);
 
 int
-amqp_socket_error(void);
+amqp_socket_error(void *user_data);
+
+int
+amqp_socket_socket(int domain, int type, int proto);
+
+int
+amqp_socket_close(int sockfd, void *user_data);
+
+int
+amqp_socket_writev(int sockfd, const struct iovec *iov, int iovcnt,
+		   void *user_data);
 
 #define amqp_socket_setsockopt setsockopt
-#define amqp_socket_close close
-#define amqp_socket_writev writev
 
 #endif
