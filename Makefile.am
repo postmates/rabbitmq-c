@@ -12,12 +12,30 @@ librabbitmq_librabbitmq_la_SOURCES = \
 	librabbitmq/amqp_table.c \
 	librabbitmq/amqp_url.c
 
+if SSL_CYASSL
+librabbitmq_librabbitmq_la_SOURCES += librabbitmq/amqp-cyassl.c
+endif
+
+if SSL_GNUTLS
+librabbitmq_librabbitmq_la_SOURCES += librabbitmq/amqp-gnutls.c
+endif
+
+if SSL_OPENSSL
+librabbitmq_librabbitmq_la_SOURCES += librabbitmq/amqp-openssl.c
+endif
+
+if SSL_POLARSSL
+librabbitmq_librabbitmq_la_SOURCES += librabbitmq/amqp-polarssl.c
+endif
+
 librabbitmq_librabbitmq_la_CFLAGS = \
-	-I$(top_srcdir)/librabbitmq
+	-I$(top_srcdir)/librabbitmq \
+	$(SSL_CFLAGS)
 
 librabbitmq_librabbitmq_la_LDFLAGS = \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
-	$(NO_UNDEFINED)
+	$(NO_UNDEFINED) \
+	$(SSL_LIBS)
 
 if OS_UNIX
 librabbitmq_librabbitmq_la_SOURCES += librabbitmq/unix/socket.c
@@ -35,6 +53,10 @@ endif
 include_HEADERS = \
 	librabbitmq/amqp.h \
 	librabbitmq/amqp_framing.h
+
+if SSL
+include_HEADERS += librabbitmq/amqp-ssl.h
+endif
 
 BUILT_SOURCES = \
 	librabbitmq/amqp_framing.h \
