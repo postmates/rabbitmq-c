@@ -55,6 +55,7 @@ mark_as_advanced(AMQP_CODEGEN_DIR)
 
 find_package(POPT)
 find_package(XmlTo)
+find_package(OpenSSL 1.0.0)
 
 if (POPT_FOUND AND XmlTo_FOUND)
   set(DO_DOCS ON)
@@ -65,6 +66,30 @@ option(BUILD_EXAMPLES "Build Examples" ON)
 option(BUILD_TOOLS "Build Tools (requires POPT Library)" ${POPT_FOUND})
 option(BUILD_TOOLS_DOCS "Build man pages for Tools (requires xmlto)" ${DO_DOCS})
 option(BUILD_TESTS "Build tests (run tests with make test)" ON)
+option(ENABLE_SSL_SUPPORT "Enable SSL support" ON)
+
+set(SSL_ENGINE "OpenSSL" CACHE STRING "SSL Backend to use, valid options: OpenSSL, cyaSSL, GnuTLS, PolarSSL")
+mark_as_advanced(SSL_ENGINE)
+
+if (ENABLE_SSL_SUPPORT)
+  if (SSL_ENGINE STREQUAL "OpenSSL")
+    if (NOT OPENSSL_FOUND)
+      message(FATAL_ERROR "Cannot find OpenSSL package, install openssl-dev package")
+    endif()
+
+  elseif (SSL_ENGINE STREQUAL "cyaSSL")
+    find_package(cyaSSL REQUIRED)
+
+  elseif (SSL_ENGINE STREQUAL "GnuTLS")
+    find_package(GnuTLS REQUIRED)
+
+  elseif (SSL_ENGINE STREQUAL "PolarSSL")
+    find_package(PolarSSL REQUIRED)
+
+  else()
+    message(FATAL_ERROR "Unsupported SSL_ENGINE ${SSL_ENGINE}, valid engines: OpenSSL, cyaSSL, GnuTLS, or PolarSSL")
+  endif()
+endif()
 
 if (WIN32 AND NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "The rabbitmq-c library cannot be built as a static library on Win32. Set BUILD_SHARED_LIBS=ON to get around this.")

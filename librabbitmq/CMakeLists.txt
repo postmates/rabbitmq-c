@@ -70,6 +70,35 @@ set(LIBRABBITMQ_INCLUDE_DIRS
 
 add_definitions(-DHAVE_CONFIG_H)
 
+if (ENABLE_SSL_SUPPORT)
+  add_definitions(-DWITH_SSL=1)
+
+  if (SSL_ENGINE STREQUAL "OpenSSL")
+    set(AMQP_SSL_SRCS amqp-ssl.h amqp-openssl.c)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+    set(AMQP_SSL_LIBS ${OPENSSL_LIBRARIES})
+
+  elseif (SSL_ENGINE STREQUAL "cyaSSL")
+    set(AMQP_SSL_SRCS amqp-ssl.h amqp-cyassl.c)
+    include_directories(${CYASSL_INCLUDE_DIR})
+    set(AMQP_SSL_LIBS ${CYASSL_LIBRARIES})
+
+  elseif (SSL_ENGINE STREQUAL "GnuTLS")
+    set(AMQP_SSL_SRCS amqp-ssl.h amqp-gnutls.c)
+    include_directories(${GNUTLS_INCLUDE_DIR})
+    add_definitions(${GNUTLS_DEFINITIONS})
+    set(AMQP_SSL_LIBS ${GNUTLS_LIBRARIES})
+
+  elseif (SSL_ENGINE STREQUAL "PolarSSL")
+    set(AMQP_SSL_SRCS amqp-ssl.h amqp-polarssl.c)
+    include_directories(${POLARSSL_INCLUDE_DIR})
+    set(AMQP_SSL_LIBS ${POLARSSL_LIBRARIES})
+
+  else()
+    message(FATAL_ERROR "Unknown SSL_ENGINE ${SSL_ENGINE}")
+  endif()
+endif()
+
 set(RABBITMQ_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/amqp_framing.h
     ${CMAKE_CURRENT_BINARY_DIR}/amqp_framing.c
@@ -77,6 +106,7 @@ set(RABBITMQ_SOURCES
     amqp_connection.c  amqp_mem.c  amqp_private.h  amqp_socket.c  amqp_table.c
     amqp_url.c
     ${SOCKET_IMPL}/socket.h ${SOCKET_IMPL}/socket.c
+    ${AMQP_SSL_SRCS}
 )
 
 add_definitions(-DAMQP_BUILD)
@@ -86,6 +116,10 @@ if (NOT BUILD_SHARED_LIBS)
 endif()
 
 add_library(rabbitmq ${RABBITMQ_SOURCES})
+
+if (ENABLE_SSL_SUPPORT)
+  target_link_libraries(rabbitmq ${AMQP_SSL_LIBS})
+endif()
 
 if(WIN32)
   target_link_libraries(rabbitmq ws2_32)
