@@ -18,23 +18,6 @@ if (STD_C99)
   set(CMAKE_C_FLAGS "-std=c99")
 endif (STD_C99)
 
-include(CheckIncludeFiles)
-
-check_include_files("arpa/inet.h" HAVE_ARPA_INET_H)
-if (HAVE_ARPA_INET_H)
-  add_definitions(-DHAVE_ARPA_INET_H)
-endif (HAVE_ARPA_INET_H)
-
-check_include_files("netdb.h" HAVE_NETDB_H)
-if (HAVE_NETDB_H)
-  add_definitions(-DHAVE_NETDB_H)
-endif (HAVE_NETDB_H)
-
-check_include_files("netinet/tcp.h" HAVE_NETINET_TCP_H)
-if (HAVE_NETINET_TCP_H)
-  add_definitions(-DHAVE_NETINET_TCP_H)
-endif (HAVE_NETINET_TCP_H)
-
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif()
