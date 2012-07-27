@@ -41,6 +41,20 @@
 #include "amqp_framing.h"
 #include <string.h>
 
+#ifndef _AMQP_INLINE
+# if defined(__llvm__)
+/* extern inline breaks on LLVM saying 'symbol not found'
+ *  but the inline keyword is only treated as a "mild hint"
+ *   to the LLVM optimizer anyway, so we'll just disable it.
+ */
+#  define _AMQP_INLINE
+# elif defined(__GNUC__) && !defined(__GNUC_STDC_INLINE__)
+#  define _AMQP_INLINE extern __inline
+# else
+#  define _AMQP_INLINE __inline
+# endif
+#endif
+
 /* Error numbering: Because of differences in error numbering on
  * different platforms, we want to keep error numbers opaque for
  * client code.  Internally, we encode the category of an error
@@ -150,7 +164,7 @@ struct amqp_connection_state_t_ {
   amqp_rpc_reply_t most_recent_api_result;
 };
 
-static inline void *amqp_offset(void *data, size_t offset)
+_AMQP_INLINE void *amqp_offset(void *data, size_t offset)
 {
   return (char *)data + offset;
 }
@@ -160,7 +174,7 @@ static inline void *amqp_offset(void *data, size_t offset)
 
 #define DECLARE_CODEC_BASE_TYPE(bits, htonx, ntohx)                         \
                                                                             \
-static inline void amqp_e##bits(void *data, size_t offset,                  \
+_AMQP_INLINE void amqp_e##bits(void *data, size_t offset,                   \
                                 uint##bits##_t val)                         \
 {									    \
   /* The AMQP data might be unaligned. So we encode and then copy the       \
@@ -169,7 +183,7 @@ static inline void amqp_e##bits(void *data, size_t offset,                  \
   memcpy(amqp_offset(data, offset), &res, bits/8);                          \
 }                                                                           \
                                                                             \
-static inline uint##bits##_t amqp_d##bits(void *data, size_t offset)        \
+_AMQP_INLINE uint##bits##_t amqp_d##bits(void *data, size_t offset)         \
 {			      		   				    \
   /* The AMQP data might be unaligned.  So we copy the source value	    \
      into a variable and then decode it. */				    \
@@ -178,7 +192,7 @@ static inline uint##bits##_t amqp_d##bits(void *data, size_t offset)        \
   return ntohx(val);							    \
 }                                                                           \
                                                                             \
-static inline int amqp_encode_##bits(amqp_bytes_t encoded, size_t *offset,  \
+_AMQP_INLINE int amqp_encode_##bits(amqp_bytes_t encoded, size_t *offset,   \
                                      uint##bits##_t input)                  \
                                                                             \
 {                                                                           \
@@ -192,7 +206,7 @@ static inline int amqp_encode_##bits(amqp_bytes_t encoded, size_t *offset,  \
   }                                                                         \
 }                                                                           \
                                                                             \
-static inline int amqp_decode_##bits(amqp_bytes_t encoded, size_t *offset,  \
+_AMQP_INLINE int amqp_decode_##bits(amqp_bytes_t encoded, size_t *offset,   \
                                      uint##bits##_t *output)                \
                                                                             \
 {                                                                           \
@@ -209,7 +223,7 @@ static inline int amqp_decode_##bits(amqp_bytes_t encoded, size_t *offset,  \
 #ifndef WORDS_BIGENDIAN
 
 #define DECLARE_XTOXLL(func)                      \
-static inline uint64_t func##ll(uint64_t val)     \
+_AMQP_INLINE uint64_t func##ll(uint64_t val)      \
 {                                                 \
   union {                                         \
     uint64_t whole;                               \
@@ -226,7 +240,7 @@ static inline uint64_t func##ll(uint64_t val)     \
 #else
 
 #define DECLARE_XTOXLL(func)                      \
-static inline uint64_t func##ll(uint64_t val)     \
+_AMQP_INLINE uint64_t func##ll(uint64_t val)      \
 {                                                 \
   union {                                         \
     uint64_t whole;                               \
@@ -250,7 +264,7 @@ DECLARE_CODEC_BASE_TYPE(16, htons, ntohs)
 DECLARE_CODEC_BASE_TYPE(32, htonl, ntohl)
 DECLARE_CODEC_BASE_TYPE(64, htonll, ntohll)
 
-static inline int amqp_encode_bytes(amqp_bytes_t encoded, size_t *offset,
+_AMQP_INLINE int amqp_encode_bytes(amqp_bytes_t encoded, size_t *offset,
 				    amqp_bytes_t input)
 {
   size_t o = *offset;
@@ -263,7 +277,7 @@ static inline int amqp_encode_bytes(amqp_bytes_t encoded, size_t *offset,
   }
 }
 
-static inline int amqp_decode_bytes(amqp_bytes_t encoded, size_t *offset,
+_AMQP_INLINE int amqp_decode_bytes(amqp_bytes_t encoded, size_t *offset,
 				    amqp_bytes_t *output, size_t len)
 {
   size_t o = *offset;
