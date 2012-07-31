@@ -259,14 +259,6 @@ EXTRA_DIST = \
 	codegen/license_info \
 	debian \
 	librabbitmq/codegen.py \
-	tests/test_tables.expected \
-	tools/doc/amqp-consume.xml \
-	tools/doc/amqp-declare-queue.xml \
-	tools/doc/amqp-delete-queue.xml \
-	tools/doc/amqp-get.xml \
-	tools/doc/amqp-publish.xml \
-	tools/doc/librabbitmq-tools.xml \
-	tools/doc/man-date.ent
 
 MOSTLYCLEANFILES = \
 	$(man_MANS) \
