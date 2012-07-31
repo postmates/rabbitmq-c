@@ -47,7 +47,7 @@
  *  but the inline keyword is only treated as a "mild hint"
  *   to the LLVM optimizer anyway, so we'll just disable it.
  */
-#  define _AMQP_INLINE
+#  define _AMQP_INLINE static
 # elif defined(__GNUC__) && !defined(__GNUC_STDC_INLINE__)
 #  define _AMQP_INLINE extern __inline
 # else
