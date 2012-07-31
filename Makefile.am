@@ -258,7 +258,7 @@ EXTRA_DIST = \
 	codegen/demo_extension.json \
 	codegen/license_info \
 	debian \
-	librabbitmq/codegen.py \
+	librabbitmq/codegen.py
 
 MOSTLYCLEANFILES = \
 	$(man_MANS) \
