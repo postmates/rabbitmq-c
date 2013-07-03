@@ -57,7 +57,7 @@ librabbitmq_librabbitmq_la_LDFLAGS = \
 	$(SSL_LIBS)
 
 if OS_UNIX
-librabbitmq_librabbitmq_la_SOURCES += librabbitmq/unix/threads.h
+librabbitmq_librabbitmq_la_SOURCES += librabbitmq/unix/threads.h librabbitmq/unix/socket.c
 librabbitmq_librabbitmq_la_CFLAGS += -I$(top_srcdir)/librabbitmq/unix
 endif
 
