@@ -12,7 +12,7 @@ endif #REGENERATE_AMQP_FRAMING
 lib_LTLIBRARIES = librabbitmq/librabbitmq.la
 
 librabbitmq_librabbitmq_la_SOURCES = \
-	librabbitmq/amqp-socket.h \
+	librabbitmq/amqp_socket.h \
 	librabbitmq/amqp_tcp_socket.c \
 	librabbitmq/amqp_api.c \
 	librabbitmq/amqp_connection.c \
