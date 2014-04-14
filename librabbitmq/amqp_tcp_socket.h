@@ -1,4 +1,5 @@
 /* vim:set ft=c ts=2 sw=2 sts=2 et cindent: */
+/** \file */
 /*
  * Copyright 2012-2013 Michael Steinert
  *
@@ -35,14 +36,16 @@ AMQP_BEGIN_DECLS
 /**
  * Create a new TCP socket.
  *
- * Call amqp_socket_close() to release socket resources.
+ * Call amqp_connection_close() to release socket resources.
  *
  * \return A new socket object or NULL if an error occurred.
+ *
+ * \since v0.4.0
  */
 AMQP_PUBLIC_FUNCTION
 amqp_socket_t *
 AMQP_CALL
-amqp_tcp_socket_new(void);
+amqp_tcp_socket_new(amqp_connection_state_t state);
 
 /**
  * Assign an open file descriptor to a socket object.
@@ -53,11 +56,13 @@ amqp_tcp_socket_new(void);
  *
  * \param [in,out] self A TCP socket object.
  * \param [in] sockfd An open socket descriptor.
+ *
+ * \since v0.4.0
  */
 AMQP_PUBLIC_FUNCTION
 void
 AMQP_CALL
-amqp_tcp_socket_set_sockfd(amqp_socket_t *base, int sockfd);
+amqp_tcp_socket_set_sockfd(amqp_socket_t *self, int sockfd);
 
 AMQP_END_DECLS
 

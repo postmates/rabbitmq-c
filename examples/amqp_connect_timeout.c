@@ -6,6 +6,9 @@
  * Portions created by Alan Antonuk are Copyright (c) 2012-2013
  * Alan Antonuk. All Rights Reserved.
  *
+ * Portions created by Bogdan Padalko are Copyright (c) 2013.
+ * Bogdan Padalko. All Rights Reserved.
+ *
  * Portions created by VMware are Copyright (c) 2007-2012 VMware, Inc.
  * All Rights Reserved.
  *
@@ -39,59 +42,69 @@
 #include <string.h>
 
 #include <stdint.h>
-#include <amqp_tcp_socket.h>
 #include <amqp.h>
-#include <amqp_framing.h>
+#include <amqp_tcp_socket.h>
+
+#include <assert.h>
+
+#ifdef _WIN32
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <Winsock2.h>
+#else
+# include <sys/time.h>
+#endif
 
 #include "utils.h"
 
 int main(int argc, char const *const *argv)
 {
   char const *hostname;
-  int port, status;
-  char const *exchange;
-  char const *bindingkey;
-  char const *queue;
-  amqp_socket_t *socket = NULL;
+  int port;
+  amqp_socket_t *socket;
   amqp_connection_state_t conn;
+  struct timeval *tv;
 
-  if (argc < 6) {
-    fprintf(stderr, "Usage: amqp_unbind host port exchange bindingkey queue\n");
+  if (argc < 3) {
+    fprintf(stderr, "Usage: amqp_connect_timeout host port [timeout_sec [timeout_usec=0]]\n");
     return 1;
   }
 
+  if (argc > 3) {
+    tv = malloc(sizeof(struct timeval));
+
+    tv->tv_sec = atoi(argv[3]);
+
+    if (argc > 4 ) {
+      tv->tv_usec = atoi(argv[4]);
+    } else {
+      tv->tv_usec = 0;
+    }
+
+  } else {
+    tv = NULL;
+  }
+
+
   hostname = argv[1];
   port = atoi(argv[2]);
-  exchange = argv[3];
-  bindingkey = argv[4];
-  queue = argv[5];
 
   conn = amqp_new_connection();
 
   socket = amqp_tcp_socket_new(conn);
+
   if (!socket) {
     die("creating TCP socket");
   }
 
-  status = amqp_socket_open(socket, hostname, port);
-  if (status) {
-    die("opening TCP socket");
-  }
+  die_on_error(amqp_socket_open_noblock(socket, hostname, port, tv), "opening TCP socket");
 
-  die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"),
-                    "Logging in");
-  amqp_channel_open(conn, 1);
-  die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
+  die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, "guest", "guest"), "Logging in");
 
-  amqp_queue_unbind(conn, 1,
-                    amqp_cstring_bytes(queue),
-                    amqp_cstring_bytes(exchange),
-                    amqp_cstring_bytes(bindingkey),
-                    amqp_empty_table);
-  die_on_amqp_error(amqp_get_rpc_reply(conn), "Unbinding");
-
-  die_on_amqp_error(amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
   die_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS), "Closing connection");
   die_on_error(amqp_destroy_connection(conn), "Ending connection");
+
+  printf ("Done\n");
   return 0;
 }

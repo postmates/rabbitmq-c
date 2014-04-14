@@ -60,6 +60,14 @@
 #endif
 
 #ifdef _WIN32
+# ifndef WINVER
+/* WINVER 0x0502 is WinXP SP2+, Windows Server 2003 SP1+
+ * See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa383745(v=vs.85).aspx#macros_for_conditional_declarations */
+#  define WINVER 0x0502
+# endif
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
 # include <Winsock2.h>
 #else
 # include <arpa/inet.h>
@@ -175,6 +183,9 @@ struct amqp_connection_state_t_ {
 
   uint64_t next_recv_heartbeat;
   uint64_t next_send_heartbeat;
+
+  amqp_table_t server_properties;
+  amqp_pool_t properties_pool;
 };
 
 amqp_pool_t *amqp_get_or_create_channel_pool(amqp_connection_state_t connection, amqp_channel_t channel);

@@ -25,8 +25,13 @@
 #include "config.h"
 #endif
 
+#if defined(__APPLE__) && defined(__MACH__)
+# define MAC_OS_X_VERSION_MIN_REQUIRED MAC_OS_X_VERSION_10_6
+#endif
+
 #include "amqp_ssl_socket.h"
 #include "amqp_socket.h"
+#include "amqp_hostcheck.h"
 #include "amqp_private.h"
 #include "threads.h"
 
@@ -210,15 +215,9 @@ amqp_ssl_socket_verify_hostname(void *base, const char *host)
       goto error;
     }
   }
-#ifdef _MSC_VER
-#define strcasecmp _stricmp
-#endif
-  if (strcasecmp(host, (char *)utf8_value)) {
+  if (!amqp_hostcheck((char *)utf8_value, host)) {
     goto error;
   }
-#ifdef _MSC_VER
-#undef strcasecmp
-#endif
 exit:
   OPENSSL_free(utf8_value);
   return status;
@@ -228,7 +227,7 @@ error:
 }
 
 static int
-amqp_ssl_socket_open(void *base, const char *host, int port)
+amqp_ssl_socket_open(void *base, const char *host, int port, struct timeval *timeout)
 {
   struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
   long result;
@@ -243,7 +242,7 @@ amqp_ssl_socket_open(void *base, const char *host, int port)
   }
 
   SSL_set_mode(self->ssl, SSL_MODE_AUTO_RETRY);
-  self->sockfd = amqp_open_socket(host, port);
+  self->sockfd = amqp_open_socket_noblock(host, port, timeout);
   if (0 > self->sockfd) {
     status = self->sockfd;
     self->internal_error = amqp_os_socket_error();
@@ -293,6 +292,7 @@ error_out2:
   self->sockfd = -1;
 error_out1:
   SSL_free(self->ssl);
+  self->ssl = NULL;
   goto exit;
 }
 
@@ -300,28 +300,22 @@ static int
 amqp_ssl_socket_close(void *base)
 {
   struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
-  if (self) {
+
+  if (self->ssl) {
+    SSL_shutdown(self->ssl);
     SSL_free(self->ssl);
-    amqp_os_socket_close(self->sockfd);
-    SSL_CTX_free(self->ctx);
-    free(self->buffer);
-    free(self);
+    self->ssl = NULL;
   }
-  destroy_openssl();
-  return 0;
-}
 
-static int
-amqp_ssl_socket_error(void *base)
-{
-  struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
-  return self->internal_error;
-}
+  if (-1 != self->sockfd) {
+    if (amqp_os_socket_close(self->sockfd)) {
+      return AMQP_STATUS_SOCKET_ERROR;
+    }
 
-char *
-amqp_ssl_error_string(AMQP_UNUSED int err)
-{
-  return strdup("A ssl socket error occurred.");
+    self->sockfd = -1;
+  }
+
+  return AMQP_STATUS_OK;
 }
 
 static int
@@ -331,37 +325,59 @@ amqp_ssl_socket_get_sockfd(void *base)
   return self->sockfd;
 }
 
+static void
+amqp_ssl_socket_delete(void *base)
+{
+  struct amqp_ssl_socket_t *self = (struct amqp_ssl_socket_t *)base;
+
+  if (self) {
+    amqp_ssl_socket_close(self);
+
+    SSL_CTX_free(self->ctx);
+    free(self->buffer);
+    free(self);
+  }
+  destroy_openssl();
+}
+
 static const struct amqp_socket_class_t amqp_ssl_socket_class = {
   amqp_ssl_socket_writev, /* writev */
   amqp_ssl_socket_send, /* send */
   amqp_ssl_socket_recv, /* recv */
   amqp_ssl_socket_open, /* open */
   amqp_ssl_socket_close, /* close */
-  amqp_ssl_socket_error, /* error */
-  amqp_ssl_socket_get_sockfd /* get_sockfd */
+  amqp_ssl_socket_get_sockfd, /* get_sockfd */
+  amqp_ssl_socket_delete /* delete */
 };
 
 amqp_socket_t *
-amqp_ssl_socket_new(void)
+amqp_ssl_socket_new(amqp_connection_state_t state)
 {
   struct amqp_ssl_socket_t *self = calloc(1, sizeof(*self));
   int status;
   if (!self) {
-    goto error;
+    return NULL;
   }
+
+  self->sockfd = -1;
+  self->klass = &amqp_ssl_socket_class;
+  self->verify = 1;
+
   status = initialize_openssl();
   if (status) {
     goto error;
   }
+
   self->ctx = SSL_CTX_new(SSLv23_client_method());
   if (!self->ctx) {
     goto error;
   }
-  self->klass = &amqp_ssl_socket_class;
-  self->verify = 1;
+
+  amqp_set_socket(state, (amqp_socket_t *)self);
+
   return (amqp_socket_t *)self;
 error:
-  amqp_socket_close((amqp_socket_t *)self);
+  amqp_ssl_socket_delete((amqp_socket_t *)self);
   return NULL;
 }
 
@@ -518,6 +534,7 @@ amqp_ssl_locking_callback(int mode, int n,
 static int
 initialize_openssl(void)
 {
+#ifdef ENABLE_THREAD_SAFETY
 #ifdef _WIN32
   /* No such thing as PTHREAD_INITIALIZE_MUTEX macro on Win32, so we use this */
   if (NULL == openssl_init_mutex) {
@@ -533,7 +550,6 @@ initialize_openssl(void)
   }
 #endif /* _WIN32 */
 
-#ifdef ENABLE_THREAD_SAFETY
   if (pthread_mutex_lock(&openssl_init_mutex)) {
     return -1;
   }
