@@ -6,7 +6,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MIT
  *
- * Portions created by Alan Antonuk are Copyright (c) 2012-2013
+ * Portions created by Alan Antonuk are Copyright (c) 2012-2014
  * Alan Antonuk. All Rights Reserved.
  *
  * Portions created by VMware are Copyright (c) 2007-2012 VMware, Inc.
@@ -41,6 +41,9 @@
 #include "config.h"
 #endif
 
+#define AMQ_COPYRIGHT "Copyright (c) 2007-2014 VMWare Inc, Tony Garnock-Jones," \
+                      " and Alan Antonuk."
+
 #include "amqp.h"
 #include "amqp_framing.h"
 #include <string.h>
@@ -71,6 +74,7 @@
 # include <Winsock2.h>
 #else
 # include <arpa/inet.h>
+# include <sys/uio.h>
 #endif
 
 /* GCC attributes */

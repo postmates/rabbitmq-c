@@ -1,6 +1,7 @@
 /* vim:set ft=c ts=2 sw=2 sts=2 et cindent: */
 /*
- * Copyright 2013 Alan Antonuk
+ * Portions created by Alan Antonuk are Copyright (c) 2013-2014 Alan Antonuk.
+ * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -90,12 +91,16 @@ amqp_get_monotonic_timestamp(void)
 uint64_t
 amqp_get_monotonic_timestamp(void)
 {
+#ifdef __hpux
+  return (uint64_t)gethrtime();
+#else
   struct timespec tp;
   if (-1 == clock_gettime(CLOCK_MONOTONIC, &tp)) {
     return 0;
   }
 
   return ((uint64_t)tp.tv_sec * AMQP_NS_PER_S + (uint64_t)tp.tv_nsec);
+#endif
 }
 #endif /* AMQP_POSIX_TIMER_API */
 

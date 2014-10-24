@@ -1880,7 +1880,16 @@ int amqp_encode_properties(uint16_t class_id,
   }
 }
 
-AMQP_PUBLIC_FUNCTION amqp_channel_open_ok_t * AMQP_CALL amqp_channel_open(amqp_connection_state_t state, amqp_channel_t channel)
+/**
+ * amqp_channel_open
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @returns amqp_channel_open_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_channel_open_ok_t *
+AMQP_CALL amqp_channel_open(amqp_connection_state_t state, amqp_channel_t channel)
 {
   amqp_channel_open_t req;
   req.out_of_band = amqp_empty_bytes;
@@ -1889,7 +1898,17 @@ AMQP_PUBLIC_FUNCTION amqp_channel_open_ok_t * AMQP_CALL amqp_channel_open(amqp_c
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_channel_flow_ok_t * AMQP_CALL amqp_channel_flow(amqp_connection_state_t state, amqp_channel_t channel, amqp_boolean_t active)
+/**
+ * amqp_channel_flow
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] active active
+ * @returns amqp_channel_flow_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_channel_flow_ok_t *
+AMQP_CALL amqp_channel_flow(amqp_connection_state_t state, amqp_channel_t channel, amqp_boolean_t active)
 {
   amqp_channel_flow_t req;
   req.active = active;
@@ -1898,7 +1917,23 @@ AMQP_PUBLIC_FUNCTION amqp_channel_flow_ok_t * AMQP_CALL amqp_channel_flow(amqp_c
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_exchange_declare_ok_t * AMQP_CALL amqp_exchange_declare(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t exchange, amqp_bytes_t type, amqp_boolean_t passive, amqp_boolean_t durable, amqp_table_t arguments)
+/**
+ * amqp_exchange_declare
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] exchange exchange
+ * @param [in] type type
+ * @param [in] passive passive
+ * @param [in] durable durable
+ * @param [in] auto_delete auto_delete
+ * @param [in] internal internal
+ * @param [in] arguments arguments
+ * @returns amqp_exchange_declare_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_exchange_declare_ok_t *
+AMQP_CALL amqp_exchange_declare(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t exchange, amqp_bytes_t type, amqp_boolean_t passive, amqp_boolean_t durable, amqp_boolean_t auto_delete, amqp_boolean_t internal, amqp_table_t arguments)
 {
   amqp_exchange_declare_t req;
   req.ticket = 0;
@@ -1906,8 +1941,8 @@ AMQP_PUBLIC_FUNCTION amqp_exchange_declare_ok_t * AMQP_CALL amqp_exchange_declar
   req.type = type;
   req.passive = passive;
   req.durable = durable;
-  req.auto_delete = 0;
-  req.internal = 0;
+  req.auto_delete = auto_delete;
+  req.internal = internal;
   req.nowait = 0;
   req.arguments = arguments;
 
@@ -1915,7 +1950,18 @@ AMQP_PUBLIC_FUNCTION amqp_exchange_declare_ok_t * AMQP_CALL amqp_exchange_declar
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_exchange_delete_ok_t * AMQP_CALL amqp_exchange_delete(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t exchange, amqp_boolean_t if_unused)
+/**
+ * amqp_exchange_delete
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] exchange exchange
+ * @param [in] if_unused if_unused
+ * @returns amqp_exchange_delete_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_exchange_delete_ok_t *
+AMQP_CALL amqp_exchange_delete(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t exchange, amqp_boolean_t if_unused)
 {
   amqp_exchange_delete_t req;
   req.ticket = 0;
@@ -1927,7 +1973,20 @@ AMQP_PUBLIC_FUNCTION amqp_exchange_delete_ok_t * AMQP_CALL amqp_exchange_delete(
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_exchange_bind_ok_t * AMQP_CALL amqp_exchange_bind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t destination, amqp_bytes_t source, amqp_bytes_t routing_key, amqp_table_t arguments)
+/**
+ * amqp_exchange_bind
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] destination destination
+ * @param [in] source source
+ * @param [in] routing_key routing_key
+ * @param [in] arguments arguments
+ * @returns amqp_exchange_bind_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_exchange_bind_ok_t *
+AMQP_CALL amqp_exchange_bind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t destination, amqp_bytes_t source, amqp_bytes_t routing_key, amqp_table_t arguments)
 {
   amqp_exchange_bind_t req;
   req.ticket = 0;
@@ -1941,7 +2000,20 @@ AMQP_PUBLIC_FUNCTION amqp_exchange_bind_ok_t * AMQP_CALL amqp_exchange_bind(amqp
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_exchange_unbind_ok_t * AMQP_CALL amqp_exchange_unbind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t destination, amqp_bytes_t source, amqp_bytes_t routing_key, amqp_table_t arguments)
+/**
+ * amqp_exchange_unbind
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] destination destination
+ * @param [in] source source
+ * @param [in] routing_key routing_key
+ * @param [in] arguments arguments
+ * @returns amqp_exchange_unbind_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_exchange_unbind_ok_t *
+AMQP_CALL amqp_exchange_unbind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t destination, amqp_bytes_t source, amqp_bytes_t routing_key, amqp_table_t arguments)
 {
   amqp_exchange_unbind_t req;
   req.ticket = 0;
@@ -1955,7 +2027,22 @@ AMQP_PUBLIC_FUNCTION amqp_exchange_unbind_ok_t * AMQP_CALL amqp_exchange_unbind(
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_queue_declare_ok_t * AMQP_CALL amqp_queue_declare(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_boolean_t passive, amqp_boolean_t durable, amqp_boolean_t exclusive, amqp_boolean_t auto_delete, amqp_table_t arguments)
+/**
+ * amqp_queue_declare
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @param [in] passive passive
+ * @param [in] durable durable
+ * @param [in] exclusive exclusive
+ * @param [in] auto_delete auto_delete
+ * @param [in] arguments arguments
+ * @returns amqp_queue_declare_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_queue_declare_ok_t *
+AMQP_CALL amqp_queue_declare(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_boolean_t passive, amqp_boolean_t durable, amqp_boolean_t exclusive, amqp_boolean_t auto_delete, amqp_table_t arguments)
 {
   amqp_queue_declare_t req;
   req.ticket = 0;
@@ -1971,7 +2058,20 @@ AMQP_PUBLIC_FUNCTION amqp_queue_declare_ok_t * AMQP_CALL amqp_queue_declare(amqp
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_queue_bind_ok_t * AMQP_CALL amqp_queue_bind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t exchange, amqp_bytes_t routing_key, amqp_table_t arguments)
+/**
+ * amqp_queue_bind
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @param [in] exchange exchange
+ * @param [in] routing_key routing_key
+ * @param [in] arguments arguments
+ * @returns amqp_queue_bind_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_queue_bind_ok_t *
+AMQP_CALL amqp_queue_bind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t exchange, amqp_bytes_t routing_key, amqp_table_t arguments)
 {
   amqp_queue_bind_t req;
   req.ticket = 0;
@@ -1985,7 +2085,17 @@ AMQP_PUBLIC_FUNCTION amqp_queue_bind_ok_t * AMQP_CALL amqp_queue_bind(amqp_conne
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_queue_purge_ok_t * AMQP_CALL amqp_queue_purge(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue)
+/**
+ * amqp_queue_purge
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @returns amqp_queue_purge_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_queue_purge_ok_t *
+AMQP_CALL amqp_queue_purge(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue)
 {
   amqp_queue_purge_t req;
   req.ticket = 0;
@@ -1996,7 +2106,19 @@ AMQP_PUBLIC_FUNCTION amqp_queue_purge_ok_t * AMQP_CALL amqp_queue_purge(amqp_con
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_queue_delete_ok_t * AMQP_CALL amqp_queue_delete(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_boolean_t if_unused, amqp_boolean_t if_empty)
+/**
+ * amqp_queue_delete
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @param [in] if_unused if_unused
+ * @param [in] if_empty if_empty
+ * @returns amqp_queue_delete_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_queue_delete_ok_t *
+AMQP_CALL amqp_queue_delete(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_boolean_t if_unused, amqp_boolean_t if_empty)
 {
   amqp_queue_delete_t req;
   req.ticket = 0;
@@ -2009,7 +2131,20 @@ AMQP_PUBLIC_FUNCTION amqp_queue_delete_ok_t * AMQP_CALL amqp_queue_delete(amqp_c
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_queue_unbind_ok_t * AMQP_CALL amqp_queue_unbind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t exchange, amqp_bytes_t routing_key, amqp_table_t arguments)
+/**
+ * amqp_queue_unbind
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @param [in] exchange exchange
+ * @param [in] routing_key routing_key
+ * @param [in] arguments arguments
+ * @returns amqp_queue_unbind_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_queue_unbind_ok_t *
+AMQP_CALL amqp_queue_unbind(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t exchange, amqp_bytes_t routing_key, amqp_table_t arguments)
 {
   amqp_queue_unbind_t req;
   req.ticket = 0;
@@ -2022,7 +2157,19 @@ AMQP_PUBLIC_FUNCTION amqp_queue_unbind_ok_t * AMQP_CALL amqp_queue_unbind(amqp_c
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_basic_qos_ok_t * AMQP_CALL amqp_basic_qos(amqp_connection_state_t state, amqp_channel_t channel, uint32_t prefetch_size, uint16_t prefetch_count, amqp_boolean_t global)
+/**
+ * amqp_basic_qos
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] prefetch_size prefetch_size
+ * @param [in] prefetch_count prefetch_count
+ * @param [in] global global
+ * @returns amqp_basic_qos_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_basic_qos_ok_t *
+AMQP_CALL amqp_basic_qos(amqp_connection_state_t state, amqp_channel_t channel, uint32_t prefetch_size, uint16_t prefetch_count, amqp_boolean_t global)
 {
   amqp_basic_qos_t req;
   req.prefetch_size = prefetch_size;
@@ -2033,7 +2180,22 @@ AMQP_PUBLIC_FUNCTION amqp_basic_qos_ok_t * AMQP_CALL amqp_basic_qos(amqp_connect
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_basic_consume_ok_t * AMQP_CALL amqp_basic_consume(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t consumer_tag, amqp_boolean_t no_local, amqp_boolean_t no_ack, amqp_boolean_t exclusive, amqp_table_t arguments)
+/**
+ * amqp_basic_consume
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] queue queue
+ * @param [in] consumer_tag consumer_tag
+ * @param [in] no_local no_local
+ * @param [in] no_ack no_ack
+ * @param [in] exclusive exclusive
+ * @param [in] arguments arguments
+ * @returns amqp_basic_consume_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_basic_consume_ok_t *
+AMQP_CALL amqp_basic_consume(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, amqp_bytes_t consumer_tag, amqp_boolean_t no_local, amqp_boolean_t no_ack, amqp_boolean_t exclusive, amqp_table_t arguments)
 {
   amqp_basic_consume_t req;
   req.ticket = 0;
@@ -2049,7 +2211,17 @@ AMQP_PUBLIC_FUNCTION amqp_basic_consume_ok_t * AMQP_CALL amqp_basic_consume(amqp
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_basic_cancel_ok_t * AMQP_CALL amqp_basic_cancel(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t consumer_tag)
+/**
+ * amqp_basic_cancel
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] consumer_tag consumer_tag
+ * @returns amqp_basic_cancel_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_basic_cancel_ok_t *
+AMQP_CALL amqp_basic_cancel(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t consumer_tag)
 {
   amqp_basic_cancel_t req;
   req.consumer_tag = consumer_tag;
@@ -2059,7 +2231,17 @@ AMQP_PUBLIC_FUNCTION amqp_basic_cancel_ok_t * AMQP_CALL amqp_basic_cancel(amqp_c
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_basic_recover_ok_t * AMQP_CALL amqp_basic_recover(amqp_connection_state_t state, amqp_channel_t channel, amqp_boolean_t requeue)
+/**
+ * amqp_basic_recover
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @param [in] requeue requeue
+ * @returns amqp_basic_recover_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_basic_recover_ok_t *
+AMQP_CALL amqp_basic_recover(amqp_connection_state_t state, amqp_channel_t channel, amqp_boolean_t requeue)
 {
   amqp_basic_recover_t req;
   req.requeue = requeue;
@@ -2068,7 +2250,16 @@ AMQP_PUBLIC_FUNCTION amqp_basic_recover_ok_t * AMQP_CALL amqp_basic_recover(amqp
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_tx_select_ok_t * AMQP_CALL amqp_tx_select(amqp_connection_state_t state, amqp_channel_t channel)
+/**
+ * amqp_tx_select
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @returns amqp_tx_select_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_tx_select_ok_t *
+AMQP_CALL amqp_tx_select(amqp_connection_state_t state, amqp_channel_t channel)
 {
   amqp_tx_select_t req;
 
@@ -2076,7 +2267,16 @@ AMQP_PUBLIC_FUNCTION amqp_tx_select_ok_t * AMQP_CALL amqp_tx_select(amqp_connect
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_tx_commit_ok_t * AMQP_CALL amqp_tx_commit(amqp_connection_state_t state, amqp_channel_t channel)
+/**
+ * amqp_tx_commit
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @returns amqp_tx_commit_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_tx_commit_ok_t *
+AMQP_CALL amqp_tx_commit(amqp_connection_state_t state, amqp_channel_t channel)
 {
   amqp_tx_commit_t req;
 
@@ -2084,7 +2284,16 @@ AMQP_PUBLIC_FUNCTION amqp_tx_commit_ok_t * AMQP_CALL amqp_tx_commit(amqp_connect
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_tx_rollback_ok_t * AMQP_CALL amqp_tx_rollback(amqp_connection_state_t state, amqp_channel_t channel)
+/**
+ * amqp_tx_rollback
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @returns amqp_tx_rollback_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_tx_rollback_ok_t *
+AMQP_CALL amqp_tx_rollback(amqp_connection_state_t state, amqp_channel_t channel)
 {
   amqp_tx_rollback_t req;
 
@@ -2092,7 +2301,16 @@ AMQP_PUBLIC_FUNCTION amqp_tx_rollback_ok_t * AMQP_CALL amqp_tx_rollback(amqp_con
 }
 
 
-AMQP_PUBLIC_FUNCTION amqp_confirm_select_ok_t * AMQP_CALL amqp_confirm_select(amqp_connection_state_t state, amqp_channel_t channel)
+/**
+ * amqp_confirm_select
+ *
+ * @param [in] state connection state
+ * @param [in] channel the channel to do the RPC on
+ * @returns amqp_confirm_select_ok_t
+ */
+AMQP_PUBLIC_FUNCTION
+amqp_confirm_select_ok_t *
+AMQP_CALL amqp_confirm_select(amqp_connection_state_t state, amqp_channel_t channel)
 {
   amqp_confirm_select_t req;
   req.nowait = 0;

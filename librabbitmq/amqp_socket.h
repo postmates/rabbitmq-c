@@ -1,6 +1,10 @@
 /* vim:set ft=c ts=2 sw=2 sts=2 et cindent: */
 /*
- * Copyright 2012-2013 Michael Steinert
+ * Portions created by Alan Antonuk are Copyright (c) 2013-2014 Alan Antonuk.
+ * All Rights Reserved.
+ *
+ * Portions created by Michael Steinert are Copyright (c) 2012-2013 Michael
+ * Steinert. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -92,7 +96,7 @@ amqp_set_socket(amqp_connection_state_t state, amqp_socket_t *socket);
  *
  * This function wraps writev(2) functionality.
  *
- * This function will only reutrn on error, or when all of the bytes referred
+ * This function will only return on error, or when all of the bytes referred
  * to in iov have been sent. NOTE: this function may modify the iov struct.
  *
  * \param [in,out] self A socket object.
