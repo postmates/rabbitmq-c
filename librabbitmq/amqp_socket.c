@@ -329,6 +329,45 @@ int amqp_open_socket_noblock(char const *hostname,
       continue;
     }
 
+    /* Enable TCP keepalives */
+    if (0 != amqp_os_socket_setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &one, sizeof(one))) {
+      last_error = AMQP_STATUS_SOCKET_ERROR;
+      continue;
+    }
+
+#if defined(TCP_KEEPIDLE) && defined(TCP_KEEPINTVL) && defined(TCP_KEEPCNT)
+    /*
+       Configure TCP keepalive parameters which would guarantee that we
+       send tcp keepalive packet at least once every 30 seconds and close
+       the client's connection if the server does not get back to us after 60 seconds.
+
+       This should be analogous to setting the following sysctl values system wide:
+       net.ipv4.tcp_keepalive_time = 30
+       net.ipv4.tcp_keepalive_intvl = 15
+       net.ipv4.tcp_keepalive_probes = 2
+
+       See also: http://www.tldp.org/HOWTO/TCP-Keepalive-HOWTO/programming.html
+    */
+    int tcp_keepalive_time = 30;
+    int tcp_keepalive_intvl = 15;
+    int tcp_keepalive_probes = 2;
+
+    if (0 != amqp_os_socket_setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPIDLE, &tcp_keepalive_time, sizeof(tcp_keepalive_time))) {
+      last_error = AMQP_STATUS_SOCKET_ERROR;
+      continue;
+    }
+
+    if (0 != amqp_os_socket_setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPINTVL, &tcp_keepalive_intvl, sizeof(tcp_keepalive_intvl))) {
+      last_error = AMQP_STATUS_SOCKET_ERROR;
+      continue;
+    }
+
+    if (0 != amqp_os_socket_setsockopt(sockfd, IPPROTO_TCP, TCP_KEEPCNT, &tcp_keepalive_probes, sizeof(tcp_keepalive_probes))) {
+      last_error = AMQP_STATUS_SOCKET_ERROR;
+      continue;
+    }
+#endif
+
     if (timeout) {
       /* Trying to connect with timeout, set socket to non-blocking mode */
       if (AMQP_STATUS_OK != amqp_os_socket_setsockblock(sockfd, 0)) {
